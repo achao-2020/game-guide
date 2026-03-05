@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gameguide.mapper.GuideTagMapper">
+
+    <insert id="insert" parameterType="com.gameguide.entity.GuideTag">
+        INSERT INTO guide_tag (guide_id, tag_id)
+        VALUES (#{guideId}, #{tagId})
+    </insert>
+
+    <delete id="deleteByGuideId">
+        DELETE FROM guide_tag WHERE guide_id = #{guideId}
+    </delete>
+
+    <delete id="deleteByTagId">
+        DELETE FROM guide_tag WHERE tag_id = #{tagId}
+    </delete>
+
+    <select id="selectByGuideId" resultType="com.gameguide.entity.GuideTag">
+        SELECT guide_id, tag_id
+        FROM guide_tag
+        WHERE guide_id = #{guideId}
+    </select>
+
+</mapper>
+

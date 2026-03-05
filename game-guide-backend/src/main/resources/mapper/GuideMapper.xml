@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gameguide.mapper.GuideMapper">
+
+    <resultMap id="BaseResultMap" type="com.gameguide.entity.Guide">
+        <id column="id" property="id"/>
+        <result column="game_id" property="gameId"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="VOResultMap" type="com.gameguide.vo.GuideVO">
+        <id column="id" property="id"/>
+        <result column="game_id" property="gameId"/>
+        <result column="game_name" property="gameName"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gameguide.entity.Guide" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO guide (game_id, category_id, title, content, view_count, created_at, updated_at)
+        VALUES (#{gameId}, #{categoryId}, #{title}, #{content}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <update id="update" parameterType="com.gameguide.entity.Guide">
+        UPDATE guide
+        SET game_id = #{gameId},
+            category_id = #{categoryId},
+            title = #{title},
+            content = #{content},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM guide WHERE id = #{id}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id, game_id, category_id, title, content, view_count, created_at, updated_at
+        FROM guide
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectVOById" resultMap="VOResultMap">
+        SELECT 
+            g.id,
+            g.game_id,
+            gm.name AS game_name,
+            g.category_id,
+            c.name AS category_name,
+            g.title,
+            g.content,
+            g.view_count,
+            g.created_at,
+            g.updated_at
+        FROM guide g
+        LEFT JOIN game gm ON g.game_id = gm.id
+        LEFT JOIN category c ON g.category_id = c.id
+        WHERE g.id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="VOResultMap">
+        SELECT 
+            g.id,
+            g.game_id,
+            gm.name AS game_name,
+            g.category_id,
+            c.name AS category_name,
+            g.title,
+            g.content,
+            g.view_count,
+            g.created_at,
+            g.updated_at
+        FROM guide g
+        LEFT JOIN game gm ON g.game_id = gm.id
+        LEFT JOIN category c ON g.category_id = c.id
+        ORDER BY g.created_at DESC
+    </select>
+
+    <select id="searchByKeyword" resultMap="VOResultMap">
+        SELECT 
+            g.id,
+            g.game_id,
+            gm.name AS game_name,
+            g.category_id,
+            c.name AS category_name,
+            g.title,
+            g.content,
+            g.view_count,
+            g.created_at,
+            g.updated_at
+        FROM guide g
+        LEFT JOIN game gm ON g.game_id = gm.id
+        LEFT JOIN category c ON g.category_id = c.id
+        WHERE g.title ILIKE CONCAT('%', #{keyword}, '%')
+           OR g.content ILIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY g.created_at DESC
+    </select>
+
+    <select id="searchByConditions" resultMap="VOResultMap">
+        SELECT 
+            g.id,
+            g.game_id,
+            gm.name AS game_name,
+            g.category_id,
+            c.name AS category_name,
+            g.title,
+            g.content,
+            g.view_count,
+            g.created_at,
+            g.updated_at
+        FROM guide g
+        LEFT JOIN game gm ON g.game_id = gm.id
+        LEFT JOIN category c ON g.category_id = c.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (g.title ILIKE CONCAT('%', #{keyword}, '%')
+                OR g.content ILIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="gameId != null">
+                AND g.game_id = #{gameId}
+            </if>
+            <if test="categoryId != null">
+                AND g.category_id = #{categoryId}
+            </if>
+        </where>
+        ORDER BY g.created_at DESC
+    </select>
+
+    <update id="incrementViewCount">
+        UPDATE guide
+        SET view_count = view_count + 1
+        WHERE id = #{id}
+    </update>
+
+</mapper>
+

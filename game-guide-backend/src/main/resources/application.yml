@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: game-guide-backend
+  
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://192.168.2.108:5431/game_guide
+    username: user_XA6emr
+    password: password_SEcYGz
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.gameguide.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+pagehelper:
+  helper-dialect: postgresql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+server:
+  port: 8080
+
+jwt:
+  secret: game-guide-secret-key-for-jwt-token-generation-must-be-at-least-256-bits
+  expiration: 86400000
+
+logging:
+  level:
+    com.gameguide: debug
+    org.springframework: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+file:
+  # 存储类型: local(本地存储) 或 minio(MinIO对象存储)
+  storage:
+    type: minio
+  upload:
+    path: D:/project/game-guide/uploads
+    url-prefix: /api/files/
+
+# MinIO对象存储配置
+minio:
+  endpoint: http://192.168.2.108:9000
+  access-key: minio_5nAdys
+  secret-key: minio_jM3WYB
+  bucket-name: game-guide
+

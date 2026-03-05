@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gameguide.mapper.CategoryMapper">
+
+    <resultMap id="BaseResultMap" type="com.gameguide.entity.Category">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="created_at" property="createdAt"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gameguide.entity.Category" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO category (name, created_at)
+        VALUES (#{name}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <update id="update" parameterType="com.gameguide.entity.Category">
+        UPDATE category
+        SET name = #{name}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM category WHERE id = #{id}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id, name, created_at
+        FROM category
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT id, name, created_at
+        FROM category
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>
+

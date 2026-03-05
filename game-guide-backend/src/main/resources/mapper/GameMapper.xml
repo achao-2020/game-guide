@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gameguide.mapper.GameMapper">
+
+    <resultMap id="BaseResultMap" type="com.gameguide.entity.Game">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gameguide.entity.Game" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO game (name, description, cover_image, created_at, updated_at)
+        VALUES (#{name}, #{description}, #{coverImage}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <update id="update" parameterType="com.gameguide.entity.Game">
+        UPDATE game
+        SET name = #{name},
+            description = #{description},
+            cover_image = #{coverImage},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM game WHERE id = #{id}
+    </delete>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id, name, description, cover_image, created_at, updated_at
+        FROM game
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT id, name, description, cover_image, created_at, updated_at
+        FROM game
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="searchByKeyword" resultMap="BaseResultMap">
+        SELECT id, name, description, cover_image, created_at, updated_at
+        FROM game
+        WHERE name ILIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY created_at DESC
+    </select>
+</mapper>
+
