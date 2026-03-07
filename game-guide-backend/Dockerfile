@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/openjdk/jdk:17-ubuntu
+FROM eclipse-temurin:17
 
 WORKDIR /app
 
