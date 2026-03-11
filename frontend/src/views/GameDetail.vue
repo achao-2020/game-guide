@@ -41,7 +41,7 @@
           >
             <div class="guide-main">
               <h3 class="guide-title">{{ guide.title }}</h3>
-              <p class="guide-content">{{ guide.content }}</p>
+              <div class="guide-content" v-html="renderMarkdown(guide.content)"></div>
               <div class="guide-footer">
                 <div class="guide-tags">
                   <el-tag
@@ -84,6 +84,9 @@ import { Calendar } from '@element-plus/icons-vue'
 import { gameAPI } from '@/api/game'
 import { guideAPI } from '@/api/guide'
 import { categoryAPI } from '@/api/category'
+import { marked } from 'marked'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
 
 const route = useRoute()
 const router = useRouter()
@@ -94,6 +97,28 @@ const game = ref(null)
 const guides = ref([])
 const categories = ref([])
 const selectedCategory = ref(null)
+
+// 配置 marked
+marked.setOptions({
+  highlight: function(code, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return hljs.highlight(code, { language: lang }).value
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    return hljs.highlightAuto(code).value
+  },
+  breaks: true,
+  gfm: true
+})
+
+// 渲染 Markdown 内容
+const renderMarkdown = (content) => {
+  if (!content) return ''
+  return marked(content)
+}
 
 const pagination = reactive({
   pageNum: 1,
@@ -280,6 +305,58 @@ onMounted(() => {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.guide-content :deep(h1),
+.guide-content :deep(h2),
+.guide-content :deep(h3),
+.guide-content :deep(h4),
+.guide-content :deep(h5),
+.guide-content :deep(h6) {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  display: inline;
+}
+
+.guide-content :deep(p) {
+  margin: 0;
+  display: inline;
+}
+
+.guide-content :deep(code) {
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+  font-size: 85%;
+  padding: 0.2em 0.4em;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.guide-content :deep(pre) {
+  display: none;
+}
+
+.guide-content :deep(ul),
+.guide-content :deep(ol) {
+  margin: 0;
+  padding-left: 0;
+  display: inline;
+}
+
+.guide-content :deep(li) {
+  display: inline;
+}
+
+.guide-content :deep(blockquote) {
+  display: none;
+}
+
+.guide-content :deep(img) {
+  display: none;
+}
+
+.guide-content :deep(table) {
+  display: none;
 }
 
 .guide-footer {

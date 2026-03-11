@@ -1,0 +1,385 @@
+# 游戏攻略知识库系统 - 开发规范
+
+## 技术栈
+
+### 后端
+- Java 17
+- Spring Boot 3.2.0
+- Spring Security 6.x + JWT (JJWT 0.12.3)
+- MyBatis 3.0.3 + PageHelper 2.1.0
+- PostgreSQL 15
+- Maven
+- Lombok
+
+### 前端
+- Vue 3.4.0 (Composition API with <script setup>)
+- Vite 5.0.0
+- Vue Router 4.2.5
+- Pinia 2.1.7
+- Axios 1.6.2
+- Element Plus 2.5.0
+
+### 部署
+- Docker + Docker Compose
+- Nginx (反向代理)
+
+## 项目结构
+
+### 后端结构
+```
+src/main/java/com/gameguide/
+├── controller/      # REST API 控制器
+├── service/         # 业务逻辑接口
+├── service/impl/    # 业务逻辑实现
+├── mapper/          # MyBatis 数据访问接口
+├── entity/          # 数据库实体类
+├── dto/             # 请求参数对象
+├── vo/              # 响应数据对象
+├── security/        # Spring Security 配置
+├── common/          # 公共类（Result, PageResult）
+└── exception/       # 异常处理
+```
+
+### 前端结构
+```
+src/
+├── api/             # API 接口定义
+├── store/           # Pinia 状态管理
+├── router/          # 路由配置
+├── views/           # 页面组件
+├── layout/          # 布局组件
+└── utils/           # 工具类（request.js）
+```
+
+## 代码规范
+
+### 后端规范
+
+#### 1. 分层架构
+- **Controller**: 处理 HTTP 请求，参数校验，调用 Service
+- **Service**: 业务逻辑处理，事务控制
+- **Mapper**: 数据访问，SQL 操作
+- **Entity**: 数据库实体，与表结构对应
+- **DTO**: 接收前端请求参数
+- **VO**: 返回给前端的数据
+
+#### 2. 命名规范
+- 类名: 大驼峰 (PascalCase) - `UserController`
+- 方法名/变量名: 小驼峰 (camelCase) - `getUserById`
+- 常量: 全大写下划线分隔 (UPPER_SNAKE_CASE) - `MAX_SIZE`
+- 包名: 全小写 - `com.gameguide.controller`
+
+#### 3. 注解使用
+```java
+@RestController              // Controller 层
+@RequestMapping("/api/xxx")  // 路径映射
+@Service                     // Service 层
+@RequiredArgsConstructor     // Lombok 构造注入
+@Transactional              // 事务控制
+@Mapper                     // MyBatis Mapper
+@Valid                      // 参数校验
+```
+
+#### 4. 统一返回结构
+```java
+// 成功
+return Result.success(data);
+return Result.success();
+
+// 失败
+return Result.error(message);
+return Result.error(code, message);
+```
+
+#### 5. 异常处理
+- 业务异常: 抛出 `BusinessException`
+- 全局异常: 由 `GlobalExceptionHandler` 统一处理
+- 记录日志: 使用 `@Slf4j` 和 `log.error()`
+
+#### 6. 参数校验
+```java
+// DTO 中使用注解
+@NotBlank(message = "用户名不能为空")
+private String username;
+
+@Size(min = 6, message = "密码长度至少6位")
+private String password;
+
+// Controller 中触发校验
+public Result<Void> create(@Valid @RequestBody UserDTO dto)
+```
+
+#### 7. 分页查询
+```java
+// Service 中使用 PageHelper
+PageHelper.startPage(pageNum, pageSize);
+List<Game> list = gameMapper.selectAll();
+PageInfo<Game> pageInfo = new PageInfo<>(list);
+return PageResult.of(pageInfo);
+```
+
+#### 8. 事务管理
+```java
+@Transactional(rollbackFor = Exception.class)
+public void createUser(UserDTO dto) {
+    // 业务逻辑
+}
+```
+
+### 前端规范
+
+#### 1. 组件结构
+```vue
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+
+// 响应式数据
+const loading = ref(false)
+const formData = reactive({
+  username: '',
+  password: ''
+})
+
+// 方法定义
+const handleSubmit = async () => {
+  // 逻辑
+}
+
+// 生命周期
+onMounted(() => {
+  // 初始化
+})
+</script>
+
+<template>
+  <!-- 模板 -->
+</template>
+
+<style scoped>
+/* 样式 */
+</style>
+```
+
+#### 2. 命名规范
+- 组件文件: 大驼峰 - `UserList.vue`
+- 变量/方法: 小驼峰 - `handleSubmit`
+- 常量: 全大写下划线分隔 - `API_BASE_URL`
+
+#### 3. API 调用
+```javascript
+// 在 api/*.js 中定义
+export const userAPI = {
+  login(data) {
+    return request.post('/auth/login', data)
+  }
+}
+
+// 在组件中使用
+import { userAPI } from '@/api/user'
+const result = await userAPI.login(formData)
+```
+
+#### 4. 状态管理
+```javascript
+// store/user.js
+export const useUserStore = defineStore('user', {
+  state: () => ({
+    token: localStorage.getItem('token') || '',
+    username: localStorage.getItem('username') || '',
+    role: localStorage.getItem('role') || ''
+  }),
+  actions: {
+    setUserInfo(data) {
+      this.token = data.token
+      this.username = data.username
+      this.role = data.role
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('username', data.username)
+      localStorage.setItem('role', data.role)
+    }
+  }
+})
+```
+
+#### 5. 路由守卫
+```javascript
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+  if (to.path !== '/login' && !token) {
+    next('/login')
+  } else {
+    next()
+  }
+})
+```
+
+## 安全规范
+
+### 1. 认证授权
+- 使用 JWT Token 认证
+- Token 存储在 localStorage
+- 请求头自动携带: `Authorization: Bearer {token}`
+- Token 过期自动跳转登录页
+
+### 2. 权限控制
+- **ADMIN 角色**: 所有 CRUD 操作
+- **USER 角色**: 只能查看（GET 请求）
+- 前后端都需要验证权限
+
+### 3. 密码安全
+- 使用 BCrypt 加密存储
+- 不在日志中输出密码
+- 密码长度至少 6 位
+
+### 4. CORS 配置
+- 允许的来源: 配置在 SecurityConfig
+- 允许的方法: GET, POST, PUT, DELETE, OPTIONS
+- 允许携带凭证: allowCredentials = true
+
+## API 设计规范
+
+### 1. RESTful 风格
+- **GET**: 查询数据
+- **POST**: 创建数据
+- **PUT**: 更新数据
+- **DELETE**: 删除数据
+
+### 2. URL 规范
+```
+GET    /api/games              # 查询列表
+GET    /api/games/{id}         # 查询详情
+POST   /api/games              # 创建
+PUT    /api/games/{id}         # 更新
+DELETE /api/games/{id}         # 删除
+GET    /api/games?pageNum=1&pageSize=10  # 分页查询
+```
+
+### 3. 响应格式
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    // 数据
+  }
+}
+```
+
+### 4. 分页响应
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "total": 100,
+    "list": [],
+    "pageNum": 1,
+    "pageSize": 10,
+    "pages": 10
+  }
+}
+```
+
+## Docker 规范
+
+### 1. 镜像命名
+- 后端镜像: `game-guide-backend`
+- 前端镜像: `game-guide-frontend`
+
+### 2. 容器命名
+- 后端容器: `game-guide-backend`
+- 前端容器: `game-guide-frontend`
+- 数据库容器: `game-guide-postgres`
+
+### 3. 网络命名
+- 网络名称: `game-guide-network`
+
+### 4. 端口映射
+- 后端: `8080:8080`
+- 前端: `5173:80`
+- 数据库: `5432:5432`
+
+### 5. 环境变量
+- 使用 `-e` 参数或 docker-compose.yml 配置
+- 敏感信息不写入 Dockerfile
+- 支持动态配置
+
+## 数据库规范
+
+### 1. 命名规范
+- 表名: 小写下划线分隔 - `user`, `game_guide`
+- 字段名: 小写下划线分隔 - `user_id`, `created_at`
+- 主键: `id` (SERIAL)
+- 外键: `表名_id` - `game_id`
+
+### 2. 必备字段
+- `id`: 主键，自增
+- `created_at`: 创建时间，默认 CURRENT_TIMESTAMP
+- `updated_at`: 更新时间，自动更新
+
+### 3. 约束
+- 主键约束: PRIMARY KEY
+- 唯一约束: UNIQUE
+- 非空约束: NOT NULL
+- 外键约束: FOREIGN KEY
+- 默认值: DEFAULT
+
+## 开发建议
+
+1. **代码风格**
+   - 遵循项目现有的代码风格
+   - 使用 Lombok 简化代码
+   - 添加适当的注释
+
+2. **异常处理**
+   - 考虑边界情况
+   - 提供友好的错误提示
+   - 记录详细的错误日志
+
+3. **权限验证**
+   - 前后端都要验证权限
+   - 不信任前端传来的任何数据
+   - 敏感操作需要二次确认
+
+4. **性能优化**
+   - 使用分页查询
+   - 添加数据库索引
+   - 避免 N+1 查询
+
+5. **测试**
+   - 测试正常流程
+   - 测试异常情况
+   - 测试权限控制
+
+## 常用命令
+
+### Maven
+```bash
+mvn clean package -DskipTests  # 打包
+mvn spring-boot:run            # 运行
+```
+
+### Docker
+```bash
+docker build -t image-name .                    # 构建镜像
+docker run -d -p 8080:8080 --name container-name image-name  # 运行容器
+docker-compose up -d                            # 启动所有服务
+docker-compose down                             # 停止所有服务
+docker logs -f container-name                   # 查看日志
+```
+
+### npm
+```bash
+npm install        # 安装依赖
+npm run dev        # 开发模式
+npm run build      # 生产构建
+```
+
+## 注意事项
+
+1. 生成代码时严格遵循以上规范
+2. 保持代码风格与项目一致
+3. 考虑安全性和性能
+4. 添加必要的注释和文档
+5. 处理异常和边界情况
+

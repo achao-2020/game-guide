@@ -64,115 +64,27 @@
         style="margin-top: 20px; justify-content: flex-end"
       />
     </el-card>
-
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="800px"
-      @close="resetForm"
-    >
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="游戏" prop="gameId">
-          <el-select v-model="form.gameId" placeholder="请选择游戏" style="width: 100%">
-            <el-option
-              v-for="game in games"
-              :key="game.id"
-              :label="game.name"
-              :value="game.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="分类" prop="categoryId">
-          <el-select v-model="form.categoryId" placeholder="请选择分类" style="width: 100%">
-            <el-option
-              v-for="category in categories"
-              :key="category.id"
-              :label="category.name"
-              :value="category.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="form.title" placeholder="请输入攻略标题" />
-        </el-form-item>
-        <el-form-item label="标签" prop="tagIds">
-          <el-select
-            v-model="form.tagIds"
-            multiple
-            placeholder="请选择标签"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="tag in tags"
-              :key="tag.id"
-              :label="tag.name"
-              :value="tag.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="内容" prop="content">
-          <el-input
-            v-model="form.content"
-            type="textarea"
-            :rows="10"
-            placeholder="请输入攻略内容（支持Markdown）"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">
-          确定
-        </el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { guideAPI } from '@/api/guide'
-import { gameAPI } from '@/api/game'
-import { categoryAPI } from '@/api/category'
-import { tagAPI } from '@/api/tag'
 import { useUserStore } from '@/store/user'
 
+const router = useRouter()
 const userStore = useUserStore()
 const loading = ref(false)
-const submitLoading = ref(false)
-const dialogVisible = ref(false)
-const dialogTitle = ref('新增攻略')
-const formRef = ref(null)
 const tableData = ref([])
 const searchKeyword = ref('')
-
-const games = ref([])
-const categories = ref([])
-const tags = ref([])
 
 const pagination = reactive({
   pageNum: 1,
   pageSize: 10,
   total: 0
 })
-
-const form = reactive({
-  id: null,
-  gameId: null,
-  categoryId: null,
-  title: '',
-  content: '',
-  tagIds: []
-})
-
-const rules = {
-  gameId: [{ required: true, message: '请选择游戏', trigger: 'change' }],
-  categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
-  title: [{ required: true, message: '请输入攻略标题', trigger: 'blur' }],
-  content: [{ required: true, message: '请输入攻略内容', trigger: 'blur' }]
-}
 
 const loadData = async () => {
   loading.value = true
@@ -212,35 +124,12 @@ const handleSearch = async () => {
   }
 }
 
-const loadOptions = async () => {
-  try {
-    const [gamesData, categoriesData, tagsData] = await Promise.all([
-      gameAPI.getAll(),
-      categoryAPI.getAll(),
-      tagAPI.getAll()
-    ])
-    games.value = gamesData || []
-    categories.value = categoriesData || []
-    tags.value = tagsData || []
-  } catch (error) {
-    console.error('加载选项失败:', error)
-  }
-}
-
 const handleAdd = () => {
-  dialogTitle.value = '新增攻略'
-  dialogVisible.value = true
+  router.push('/admin/guides/add')
 }
 
 const handleEdit = (row) => {
-  dialogTitle.value = '编辑攻略'
-  form.id = row.id
-  form.gameId = row.gameId
-  form.categoryId = row.categoryId
-  form.title = row.title
-  form.content = row.content
-  form.tagIds = row.tags?.map(tag => tag.id) || []
-  dialogVisible.value = true
+  router.push(`/admin/guides/edit/${row.id}`)
 }
 
 const handleDelete = (row) => {
@@ -259,54 +148,8 @@ const handleDelete = (row) => {
   })
 }
 
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate(async (valid) => {
-    if (valid) {
-      submitLoading.value = true
-      try {
-        const data = {
-          gameId: form.gameId,
-          categoryId: form.categoryId,
-          title: form.title,
-          content: form.content,
-          tagIds: form.tagIds
-        }
-        
-        if (form.id) {
-          await guideAPI.update(form.id, data)
-          ElMessage.success('更新成功')
-        } else {
-          await guideAPI.create(data)
-          ElMessage.success('创建成功')
-        }
-        dialogVisible.value = false
-        loadData()
-      } catch (error) {
-        console.error('提交失败:', error)
-      } finally {
-        submitLoading.value = false
-      }
-    }
-  })
-}
-
-const resetForm = () => {
-  form.id = null
-  form.gameId = null
-  form.categoryId = null
-  form.title = ''
-  form.content = ''
-  form.tagIds = []
-  if (formRef.value) {
-    formRef.value.resetFields()
-  }
-}
-
 onMounted(() => {
   loadData()
-  loadOptions()
 })
 </script>
 

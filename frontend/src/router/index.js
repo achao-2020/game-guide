@@ -86,6 +86,18 @@ const router = createRouter({
           meta: { title: '攻略管理', requiresAdmin: true }
         },
         {
+          path: 'guides/add',
+          name: 'AdminGuideAdd',
+          component: () => import('@/views/GuideEdit.vue'),
+          meta: { title: '新增攻略', requiresAdmin: true }
+        },
+        {
+          path: 'guides/edit/:id',
+          name: 'AdminGuideEdit',
+          component: () => import('@/views/GuideEdit.vue'),
+          meta: { title: '编辑攻略', requiresAdmin: true }
+        },
+        {
           path: 'categories',
           name: 'AdminCategories',
           component: () => import('@/views/Categories.vue'),
