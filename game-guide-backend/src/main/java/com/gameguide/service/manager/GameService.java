@@ -1,4 +1,4 @@
-package com.gameguide.service;
+package com.gameguide.service.manager;
 
 import com.gameguide.common.PageResult;
 import com.gameguide.dto.GameDTO;

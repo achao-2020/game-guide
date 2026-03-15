@@ -1,4 +1,4 @@
-package com.gameguide.controller;
+package com.gameguide.controller.manager;
 
 import com.gameguide.common.Result;
 import com.gameguide.service.FileService;

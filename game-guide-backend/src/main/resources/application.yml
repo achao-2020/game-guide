@@ -5,7 +5,8 @@ spring:
     multipart:
       max-file-size: 10MB      # 单个文件最大 10MB
       max-request-size: 20MB   # 单次请求总大小最大 20MB
-  
+  profiles:
+    active: dev
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://192.168.2.108:5431/game_guide
@@ -37,6 +38,26 @@ server:
 jwt:
   secret: game-guide-secret-key-for-jwt-token-generation-must-be-at-least-256-bits
   expiration: 86400000
+
+app:
+  auth:
+    # 是否忽略用户认证（默认 false，仅 dev 环境下配置为 true 才生效）
+    ignore-auth: false
+
+# HttpClient 配置
+http:
+  client:
+    connect-timeout: 10      # 连接超时（秒）
+    read-timeout: 15         # 读取超时（秒）
+    write-timeout: 10        # 写入超时（秒）
+
+# 爬虫配置
+spider:
+  vgover:
+    start-page: 1            # 起始页码
+    end-page: 10             # 结束页码
+    delay-millis: 1000       # 每篇文章间隔延迟（毫秒）
+    topic-id: "1612"         # 爬取的 topic ID
 
 logging:
   level:

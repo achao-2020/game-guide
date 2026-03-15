@@ -1,8 +1,8 @@
-package com.gameguide.controller;
+package com.gameguide.controller.manager;
 
 import com.gameguide.common.PageResult;
 import com.gameguide.common.Result;
-import com.gameguide.service.GuideService;
+import com.gameguide.service.manager.GuideService;
 import com.gameguide.vo.GuideVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

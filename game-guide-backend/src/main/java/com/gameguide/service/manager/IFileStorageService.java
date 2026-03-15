@@ -1,4 +1,4 @@
-package com.gameguide.service;
+package com.gameguide.service.manager;
 
 import com.gameguide.enums.FileStorageType;
 import org.springframework.web.multipart.MultipartFile;

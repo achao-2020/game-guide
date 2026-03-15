@@ -1,9 +1,9 @@
-package com.gameguide.service.impl;
+package com.gameguide.service.manager.impl;
 
 import com.gameguide.entity.FileHash;
 import com.gameguide.enums.FileStorageType;
 import com.gameguide.service.FileHashService;
-import com.gameguide.service.IFileStorageService;
+import com.gameguide.service.manager.IFileStorageService;
 import com.gameguide.util.FileUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,11 +1,11 @@
-package com.gameguide.service.impl;
+package com.gameguide.service.manager.impl;
 
 import com.gameguide.common.PageResult;
 import com.gameguide.dao.CategoryDao;
 import com.gameguide.dto.CategoryDTO;
 import com.gameguide.entity.Category;
 import com.gameguide.exception.BusinessException;
-import com.gameguide.service.CategoryService;
+import com.gameguide.service.manager.CategoryService;
 import com.gameguide.vo.CategoryVO;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;

@@ -1,9 +1,9 @@
-package com.gameguide.controller;
+package com.gameguide.controller.manager;
 
 import com.gameguide.common.PageResult;
 import com.gameguide.common.Result;
 import com.gameguide.dto.GuideDTO;
-import com.gameguide.service.GuideService;
+import com.gameguide.service.manager.GuideService;
 import com.gameguide.vo.GuideVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

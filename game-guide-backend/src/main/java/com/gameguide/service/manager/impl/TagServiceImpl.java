@@ -1,4 +1,4 @@
-package com.gameguide.service.impl;
+package com.gameguide.service.manager.impl;
 
 import com.gameguide.common.PageResult;
 import com.gameguide.dao.TagDao;
@@ -6,7 +6,7 @@ import com.gameguide.dao.GuideTagDao;
 import com.gameguide.dto.TagDTO;
 import com.gameguide.entity.Tag;
 import com.gameguide.exception.BusinessException;
-import com.gameguide.service.TagService;
+import com.gameguide.service.manager.TagService;
 import com.gameguide.vo.TagVO;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;

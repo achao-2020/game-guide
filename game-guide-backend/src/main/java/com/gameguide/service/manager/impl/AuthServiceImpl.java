@@ -1,4 +1,4 @@
-package com.gameguide.service.impl;
+package com.gameguide.service.manager.impl;
 
 import com.gameguide.dao.UserDao;
 import com.gameguide.dto.LoginDTO;
@@ -6,7 +6,7 @@ import com.gameguide.dto.RegisterDTO;
 import com.gameguide.entity.User;
 import com.gameguide.exception.BusinessException;
 import com.gameguide.security.JwtUtil;
-import com.gameguide.service.AuthService;
+import com.gameguide.service.manager.AuthService;
 import com.gameguide.vo.LoginVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

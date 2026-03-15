@@ -1,4 +1,4 @@
-package com.gameguide.service;
+package com.gameguide.service.manager;
 
 import com.gameguide.dto.LoginDTO;
 import com.gameguide.dto.RegisterDTO;
