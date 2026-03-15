@@ -1,0 +1,5 @@
+app:
+  auth:
+    # dev 环境下允许关闭认证，方便本地开发调试
+    ignore-auth: true
+
