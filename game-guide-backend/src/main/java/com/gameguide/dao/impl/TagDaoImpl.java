@@ -43,6 +43,11 @@ public class TagDaoImpl implements TagDao {
     public List<Tag> selectByGuideId(Long guideId) {
         return tagMapper.selectByGuideId(guideId);
     }
+
+    @Override
+    public Tag selectByName(String name) {
+        return tagMapper.selectByName(name);
+    }
 }
 
 

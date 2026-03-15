@@ -149,7 +149,8 @@ const loadGuides = async () => {
     if (selectedCategory.value) {
       params.categoryId = selectedCategory.value
     }
-    const data = await guideAPI.search(params)
+    // 仅查询已发布攻略
+    const data = await guideAPI.searchPublished(params)
     guides.value = data.list || []
     pagination.total = data.total || 0
   } catch (error) {
@@ -167,8 +168,8 @@ const loadCategories = async () => {
   }
 }
 
-const goToGuide = (id) => {
-  router.push(`/guide/${id}`)
+const goToGuide = (guideId) => {
+  router.push(`/guide/${guideId}`)
 }
 
 const formatTime = (time) => {

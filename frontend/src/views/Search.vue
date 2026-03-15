@@ -164,10 +164,11 @@ const loadGames = async () => {
 
 const loadGuides = async () => {
   if (!keyword.value) return
-  
+
   guidesLoading.value = true
   try {
-    const data = await guideAPI.search({
+    // 前台只搜索已发布攻略
+    const data = await guideAPI.searchPublished({
       keyword: keyword.value,
       pageNum: guidePagination.pageNum,
       pageSize: guidePagination.pageSize
@@ -185,8 +186,8 @@ const goToGame = (id) => {
   router.push(`/game/${id}`)
 }
 
-const goToGuide = (id) => {
-  router.push(`/guide/${id}`)
+const goToGuide = (guideId) => {
+  router.push(`/guide/${guideId}`)
 }
 
 const formatTime = (time) => {

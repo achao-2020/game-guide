@@ -26,26 +26,28 @@
         </div>
       </template>
 
-      <el-table :data="tableData" border stripe v-loading="loading">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="标题" width="200" show-overflow-tooltip />
-        <el-table-column prop="gameName" label="游戏" width="120" />
-        <el-table-column prop="categoryName" label="分类" width="120" />
-        <el-table-column prop="tags" label="标签" width="200">
+      <el-table :data="tableData" border stripe v-loading="loading" style="width: 100%">
+        <el-table-column prop="gameName" label="游戏" min-width="120" />
+        <el-table-column prop="title" label="标题" min-width="250" show-overflow-tooltip />
+        <el-table-column prop="tags" label="标签" min-width="200">
           <template #default="{ row }">
+            <span v-if="!row.tags || row.tags.length === 0" class="text-muted">—</span>
             <el-tag
               v-for="tag in row.tags"
               :key="tag.id"
               size="small"
-              style="margin-right: 5px"
+              style="margin-right: 4px; margin-bottom: 2px"
             >
               {{ tag.name }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="viewCount" label="浏览量" width="100" />
-        <el-table-column prop="createdAt" label="创建时间" width="180" />
-        <el-table-column v-if="userStore.isAdmin" label="操作" width="180" fixed="right">
+        <el-table-column prop="createdAt" label="创建时间" min-width="180">
+          <template #default="{ row }">
+            {{ formatTime(row.createdAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column v-if="userStore.isAdmin" label="操作" min-width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
@@ -71,6 +73,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus } from '@element-plus/icons-vue'
 import { guideAPI } from '@/api/guide'
 import { useUserStore } from '@/store/user'
 
@@ -85,6 +88,17 @@ const pagination = reactive({
   pageSize: 10,
   total: 0
 })
+
+const formatTime = (time) => {
+  if (!time) return ''
+  return new Date(time).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
 const loadData = async () => {
   loading.value = true
@@ -103,11 +117,11 @@ const loadData = async () => {
 }
 
 const handleSearch = async () => {
+  pagination.pageNum = 1
   if (!searchKeyword.value) {
     loadData()
     return
   }
-  
   loading.value = true
   try {
     const data = await guideAPI.search({
@@ -133,18 +147,25 @@ const handleEdit = (row) => {
 }
 
 const handleDelete = (row) => {
-  ElMessageBox.confirm('确定要删除该攻略吗？', '提示', {
-    confirmButtonText: '确定',
+  ElMessageBox.confirm(
+    `确定要删除攻略「${row.title}」吗？此操作不可恢复。`,
+    '删除确认',
+    {
+      confirmButtonText: '确定删除',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(async () => {
+    }
+  ).then(async () => {
     try {
       await guideAPI.delete(row.id)
       ElMessage.success('删除成功')
       loadData()
     } catch (error) {
       console.error('删除失败:', error)
+      ElMessage.error('删除失败')
     }
+  }).catch(() => {
+    // 取消删除
   })
 }
 
@@ -168,7 +189,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
 }
+
+.text-muted {
+  color: #c0c4cc;
+}
 </style>
-
-
-

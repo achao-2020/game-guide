@@ -129,7 +129,6 @@ const tags = ref([])
 const isEdit = computed(() => !!route.params.id)
 
 const form = reactive({
-  id: null,
   gameId: null,
   categoryId: null,
   title: '',
@@ -183,10 +182,9 @@ const loadOptions = async () => {
 
 const loadGuideData = async () => {
   if (!route.params.id) return
-  
   try {
+    // route.params.id 为 guideId
     const data = await guideAPI.getById(route.params.id)
-    form.id = data.id
     form.gameId = data.gameId
     form.categoryId = data.categoryId
     form.title = data.title
@@ -200,7 +198,7 @@ const loadGuideData = async () => {
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       submitLoading.value = true
@@ -212,10 +210,11 @@ const handleSubmit = async () => {
           content: form.content,
           tagIds: form.tagIds
         }
-        
+
         if (isEdit.value) {
+          // route.params.id 为 guideId
           await guideAPI.update(route.params.id, data)
-          ElMessage.success('更新成功')
+          ElMessage.success('保存成功')
         } else {
           await guideAPI.create(data)
           ElMessage.success('创建成功')

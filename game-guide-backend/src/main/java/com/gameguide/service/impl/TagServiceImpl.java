@@ -28,6 +28,10 @@ public class TagServiceImpl implements TagService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createTag(TagDTO tagDTO) {
+        // 校验标签名称是否已存在
+        if (tagDao.selectByName(tagDTO.getName()) != null) {
+            throw new BusinessException("标签名称\"" + tagDTO.getName() + "\"已存在");
+        }
         Tag tag = new Tag();
         BeanUtils.copyProperties(tagDTO, tag);
         tagDao.insert(tag);
@@ -40,6 +44,11 @@ public class TagServiceImpl implements TagService {
         Tag existingTag = tagDao.selectById(id);
         if (existingTag == null) {
             throw new BusinessException("标签不存在");
+        }
+        // 校验名称是否被其他标签占用
+        Tag tagWithSameName = tagDao.selectByName(tagDTO.getName());
+        if (tagWithSameName != null && !tagWithSameName.getId().equals(id)) {
+            throw new BusinessException("标签名称\"" + tagDTO.getName() + "\"已存在");
         }
         Tag tag = new Tag();
         BeanUtils.copyProperties(tagDTO, tag);

@@ -136,7 +136,8 @@ const loadGames = async () => {
 const loadGuides = async () => {
   guidesLoading.value = true
   try {
-    const data = await guideAPI.getList({ pageNum: 1, pageSize: 6 })
+    // 首页只展示已发布攻略
+    const data = await guideAPI.getPublishedList({ pageNum: 1, pageSize: 6 })
     guides.value = data.list || []
   } catch (error) {
     console.error('加载攻略失败:', error)
@@ -161,8 +162,8 @@ const goToGame = (id) => {
   router.push(`/game/${id}`)
 }
 
-const goToGuide = (id) => {
-  router.push(`/guide/${id}`)
+const goToGuide = (guideId) => {
+  router.push(`/guide/${guideId}`)
 }
 
 const goToCategory = (id) => {

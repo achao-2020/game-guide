@@ -20,6 +20,8 @@ public interface TagDao {
     List<Tag> selectAll();
 
     List<Tag> selectByGuideId(Long guideId);
+
+    Tag selectByName(String name);
 }
 
 

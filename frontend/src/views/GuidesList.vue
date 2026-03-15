@@ -186,7 +186,7 @@ const loadGuides = async () => {
   loading.value = true
   try {
     let data
-    // 如果有搜索条件或筛选条件，使用搜索接口
+    // 如果有搜索条件或筛选条件，使用搜索接口（仅已发布攻略）
     if (searchKeyword.value.trim() || selectedGame.value || selectedCategory.value) {
       const params = {
         pageNum: pagination.pageNum,
@@ -201,10 +201,10 @@ const loadGuides = async () => {
       if (selectedCategory.value) {
         params.categoryId = selectedCategory.value
       }
-      data = await guideAPI.search(params)
+      data = await guideAPI.searchPublished(params)
     } else {
-      // 否则使用列表接口
-      data = await guideAPI.getList({
+      // 否则使用列表接口（仅已发布攻略）
+      data = await guideAPI.getPublishedList({
         pageNum: pagination.pageNum,
         pageSize: pagination.pageSize
       })
@@ -252,8 +252,8 @@ const handleReset = () => {
   loadGuides()
 }
 
-const goToGuide = (id) => {
-  router.push(`/guide/${id}`)
+const goToGuide = (guideId) => {
+  router.push(`/guide/${guideId}`)
 }
 
 const formatTime = (time) => {

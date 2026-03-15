@@ -97,17 +97,20 @@ const relatedGuides = ref([])
 const loadGuide = async () => {
   loading.value = true
   try {
-    const id = route.params.id
-    guide.value = await guideAPI.getById(id)
-    
+    // route.params.id 为 guideId
+    const guideId = route.params.id
+    guide.value = await guideAPI.getPublishedById(guideId)
+
     // 加载相关攻略
     if (guide.value.gameId) {
-      const data = await guideAPI.search({
+      const data = await guideAPI.searchPublished({
         gameId: guide.value.gameId,
         pageNum: 1,
         pageSize: 4
       })
-      relatedGuides.value = (data.list || []).filter(item => item.id !== guide.value.id)
+      relatedGuides.value = (data.list || []).filter(
+        item => item.id !== guide.value.id
+      )
     }
   } catch (error) {
     console.error('加载攻略失败:', error)
@@ -116,9 +119,8 @@ const loadGuide = async () => {
   }
 }
 
-const goToGuide = (id) => {
-  router.push(`/guide/${id}`)
-  // 重新加载数据
+const goToGuide = (guideId) => {
+  router.push(`/guide/${guideId}`)
   loadGuide()
 }
 

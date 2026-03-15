@@ -20,5 +20,7 @@ public interface TagMapper {
     List<Tag> selectAll();
     
     List<Tag> selectByGuideId(@Param("guideId") Long guideId);
+
+    Tag selectByName(@Param("name") String name);
 }
 
