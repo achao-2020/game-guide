@@ -20,9 +20,8 @@ public interface GuideMapper {
     
     GuideVO selectVOById(@Param("id") Long id);
     
+    /** 查询所有攻略 */
     List<GuideVO> selectAll();
-    
-    List<GuideVO> searchByKeyword(@Param("keyword") String keyword);
     
     List<GuideVO> searchByConditions(@Param("keyword") String keyword, 
                                       @Param("gameId") Long gameId, 
@@ -30,4 +29,3 @@ public interface GuideMapper {
     
     int incrementViewCount(@Param("id") Long id);
 }
-

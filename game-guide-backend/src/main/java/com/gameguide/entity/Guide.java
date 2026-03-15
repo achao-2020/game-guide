@@ -1,8 +1,12 @@
 package com.gameguide.entity;
 
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
+/**
+ * guide 表：攻略
+ */
 @Data
 public class Guide {
     private Long id;
@@ -14,4 +18,3 @@ public class Guide {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
-

@@ -1,10 +1,10 @@
 package com.gameguide.service.impl;
 
 import com.gameguide.common.PageResult;
+import com.gameguide.dao.CategoryDao;
 import com.gameguide.dto.CategoryDTO;
 import com.gameguide.entity.Category;
 import com.gameguide.exception.BusinessException;
-import com.gameguide.mapper.CategoryMapper;
 import com.gameguide.service.CategoryService;
 import com.gameguide.vo.CategoryVO;
 import com.github.pagehelper.PageHelper;
@@ -21,44 +21,43 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
-    private final CategoryMapper categoryMapper;
+    private final CategoryDao categoryDao;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createCategory(CategoryDTO categoryDTO) {
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO, category);
-        categoryMapper.insert(category);
+        categoryDao.insert(category);
         return category.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateCategory(Long id, CategoryDTO categoryDTO) {
-        Category existingCategory = categoryMapper.selectById(id);
+        Category existingCategory = categoryDao.selectById(id);
         if (existingCategory == null) {
             throw new BusinessException("分类不存在");
         }
-        
         Category category = new Category();
         BeanUtils.copyProperties(categoryDTO, category);
         category.setId(id);
-        categoryMapper.update(category);
+        categoryDao.update(category);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteCategory(Long id) {
-        Category existingCategory = categoryMapper.selectById(id);
+        Category existingCategory = categoryDao.selectById(id);
         if (existingCategory == null) {
             throw new BusinessException("分类不存在");
         }
-        categoryMapper.deleteById(id);
+        categoryDao.deleteById(id);
     }
 
     @Override
     public CategoryVO getCategoryById(Long id) {
-        Category category = categoryMapper.selectById(id);
+        Category category = categoryDao.selectById(id);
         if (category == null) {
             throw new BusinessException("分类不存在");
         }
@@ -68,20 +67,17 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public PageResult<CategoryVO> listCategories(Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
-        List<Category> categories = categoryMapper.selectAll();
+        List<Category> categories = categoryDao.selectAll();
         PageInfo<Category> pageInfo = new PageInfo<>(categories);
-        
         List<CategoryVO> categoryVOList = categories.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
-        
         return new PageResult<>(pageInfo.getTotal(), pageNum, pageSize, categoryVOList);
     }
 
     @Override
     public List<CategoryVO> listAllCategories() {
-        List<Category> categories = categoryMapper.selectAll();
-        return categories.stream()
+        return categoryDao.selectAll().stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
     }
@@ -92,4 +88,3 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryVO;
     }
 }
-

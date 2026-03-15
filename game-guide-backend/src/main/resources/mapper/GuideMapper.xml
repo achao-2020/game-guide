@@ -27,18 +27,21 @@
         <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.gameguide.entity.Guide" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO guide (game_id, category_id, title, content, view_count, created_at, updated_at)
-        VALUES (#{gameId}, #{categoryId}, #{title}, #{content}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    <insert id="insert" parameterType="com.gameguide.entity.Guide"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO guide (game_id, category_id, title, content,
+                           view_count, created_at, updated_at)
+        VALUES (#{gameId}, #{categoryId}, #{title}, #{content},
+                0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     </insert>
 
     <update id="update" parameterType="com.gameguide.entity.Guide">
         UPDATE guide
-        SET game_id = #{gameId},
-            category_id = #{categoryId},
-            title = #{title},
-            content = #{content},
-            updated_at = CURRENT_TIMESTAMP
+        SET game_id      = #{gameId},
+            category_id  = #{categoryId},
+            title        = #{title},
+            content      = #{content},
+            updated_at   = CURRENT_TIMESTAMP
         WHERE id = #{id}
     </update>
 
@@ -47,7 +50,8 @@
     </delete>
 
     <select id="selectById" resultMap="BaseResultMap">
-        SELECT id, game_id, category_id, title, content, view_count, created_at, updated_at
+        SELECT id, game_id, category_id, title, content,
+               view_count, created_at, updated_at
         FROM guide
         WHERE id = #{id}
     </select>
@@ -56,9 +60,9 @@
         SELECT 
             g.id,
             g.game_id,
-            gm.name AS game_name,
+            gm.name  AS game_name,
             g.category_id,
-            c.name AS category_name,
+            c.name   AS category_name,
             g.title,
             g.content,
             g.view_count,
@@ -70,13 +74,14 @@
         WHERE g.id = #{id}
     </select>
 
+    <!-- 查询所有攻略 -->
     <select id="selectAll" resultMap="VOResultMap">
         SELECT 
             g.id,
             g.game_id,
-            gm.name AS game_name,
+            gm.name  AS game_name,
             g.category_id,
-            c.name AS category_name,
+            c.name   AS category_name,
             g.title,
             g.content,
             g.view_count,
@@ -88,33 +93,14 @@
         ORDER BY g.created_at DESC
     </select>
 
-    <select id="searchByKeyword" resultMap="VOResultMap">
-        SELECT 
-            g.id,
-            g.game_id,
-            gm.name AS game_name,
-            g.category_id,
-            c.name AS category_name,
-            g.title,
-            g.content,
-            g.view_count,
-            g.created_at,
-            g.updated_at
-        FROM guide g
-        LEFT JOIN game gm ON g.game_id = gm.id
-        LEFT JOIN category c ON g.category_id = c.id
-        WHERE g.title ILIKE CONCAT('%', #{keyword}, '%')
-           OR g.content ILIKE CONCAT('%', #{keyword}, '%')
-        ORDER BY g.created_at DESC
-    </select>
-
+    <!-- 按条件搜索攻略 -->
     <select id="searchByConditions" resultMap="VOResultMap">
         SELECT 
             g.id,
             g.game_id,
-            gm.name AS game_name,
+            gm.name  AS game_name,
             g.category_id,
-            c.name AS category_name,
+            c.name   AS category_name,
             g.title,
             g.content,
             g.view_count,
@@ -125,7 +111,7 @@
         LEFT JOIN category c ON g.category_id = c.id
         <where>
             <if test="keyword != null and keyword != ''">
-                AND (g.title ILIKE CONCAT('%', #{keyword}, '%')
+                (g.title ILIKE CONCAT('%', #{keyword}, '%')
                 OR g.content ILIKE CONCAT('%', #{keyword}, '%'))
             </if>
             <if test="gameId != null">
@@ -145,4 +131,3 @@
     </update>
 
 </mapper>
-

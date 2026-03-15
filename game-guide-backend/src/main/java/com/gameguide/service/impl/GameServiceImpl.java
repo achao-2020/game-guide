@@ -1,10 +1,10 @@
 package com.gameguide.service.impl;
 
 import com.gameguide.common.PageResult;
+import com.gameguide.dao.GameDao;
 import com.gameguide.dto.GameDTO;
 import com.gameguide.entity.Game;
 import com.gameguide.exception.BusinessException;
-import com.gameguide.mapper.GameMapper;
 import com.gameguide.service.GameService;
 import com.gameguide.vo.GameVO;
 import com.github.pagehelper.PageHelper;
@@ -21,44 +21,43 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GameServiceImpl implements GameService {
 
-    private final GameMapper gameMapper;
+    private final GameDao gameDao;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createGame(GameDTO gameDTO) {
         Game game = new Game();
         BeanUtils.copyProperties(gameDTO, game);
-        gameMapper.insert(game);
+        gameDao.insert(game);
         return game.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateGame(Long id, GameDTO gameDTO) {
-        Game existingGame = gameMapper.selectById(id);
+        Game existingGame = gameDao.selectById(id);
         if (existingGame == null) {
             throw new BusinessException("游戏不存在");
         }
-        
         Game game = new Game();
         BeanUtils.copyProperties(gameDTO, game);
         game.setId(id);
-        gameMapper.update(game);
+        gameDao.update(game);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteGame(Long id) {
-        Game existingGame = gameMapper.selectById(id);
+        Game existingGame = gameDao.selectById(id);
         if (existingGame == null) {
             throw new BusinessException("游戏不存在");
         }
-        gameMapper.deleteById(id);
+        gameDao.deleteById(id);
     }
 
     @Override
     public GameVO getGameById(Long id) {
-        Game game = gameMapper.selectById(id);
+        Game game = gameDao.selectById(id);
         if (game == null) {
             throw new BusinessException("游戏不存在");
         }
@@ -68,20 +67,17 @@ public class GameServiceImpl implements GameService {
     @Override
     public PageResult<GameVO> listGames(Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
-        List<Game> games = gameMapper.selectAll();
+        List<Game> games = gameDao.selectAll();
         PageInfo<Game> pageInfo = new PageInfo<>(games);
-        
         List<GameVO> gameVOList = games.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
-        
         return new PageResult<>(pageInfo.getTotal(), pageNum, pageSize, gameVOList);
     }
 
     @Override
     public List<GameVO> listAllGames() {
-        List<Game> games = gameMapper.selectAll();
-        return games.stream()
+        return gameDao.selectAll().stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
     }
@@ -89,13 +85,11 @@ public class GameServiceImpl implements GameService {
     @Override
     public PageResult<GameVO> searchGames(String keyword, Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
-        List<Game> games = gameMapper.searchByKeyword(keyword);
+        List<Game> games = gameDao.searchByKeyword(keyword);
         PageInfo<Game> pageInfo = new PageInfo<>(games);
-        
         List<GameVO> gameVOList = games.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
-        
         return new PageResult<>(pageInfo.getTotal(), pageNum, pageSize, gameVOList);
     }
 
@@ -105,4 +99,3 @@ public class GameServiceImpl implements GameService {
         return gameVO;
     }
 }
-

@@ -1,6 +1,7 @@
 package com.gameguide.vo;
 
 import lombok.Data;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,4 +19,3 @@ public class GuideVO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
-

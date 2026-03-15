@@ -8,20 +8,26 @@ import java.util.List;
 
 @Data
 public class GuideDTO {
-    
+
     @NotNull(message = "游戏ID不能为空")
     private Long gameId;
-    
+
     @NotNull(message = "分类ID不能为空")
     private Long categoryId;
-    
+
     @NotBlank(message = "攻略标题不能为空")
     @Size(max = 500, message = "攻略标题长度不能超过500个字符")
     private String title;
-    
+
     @NotBlank(message = "攻略内容不能为空")
     private String content;
-    
-    private List<Long> tagIds;
-}
 
+    private List<Long> tagIds;
+
+    /**
+     * 所属版本管理记录ID
+     * 新增攻略时为 null（后端自动创建 guide_version），
+     * 编辑时传入已有的 guide_version_id
+     */
+    private Long guideVersionId;
+}

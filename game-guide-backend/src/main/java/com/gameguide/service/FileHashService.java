@@ -1,7 +1,7 @@
 package com.gameguide.service;
 
+import com.gameguide.dao.FileHashDao;
 import com.gameguide.entity.FileHash;
-import com.gameguide.mapper.FileHashMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,9 +19,9 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class FileHashService {
-    
-    private final FileHashMapper fileHashMapper;
-    
+
+    private final FileHashDao fileHashDao;
+
     /**
      * 计算文件的 MD5 哈希值
      */
@@ -30,8 +30,6 @@ public class FileHashService {
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] fileBytes = file.getBytes();
             byte[] hashBytes = md.digest(fileBytes);
-            
-            // 将字节数组转换为十六进制字符串
             StringBuilder sb = new StringBuilder();
             for (byte b : hashBytes) {
                 sb.append(String.format("%02x", b));
@@ -42,19 +40,19 @@ public class FileHashService {
             throw new IOException("计算文件哈希值失败", e);
         }
     }
-    
+
     /**
      * 根据哈希值查询文件是否存在
      */
     public FileHash getFileByHash(String fileHash) {
-        return fileHashMapper.selectByFileHash(fileHash);
+        return fileHashDao.selectByFileHash(fileHash);
     }
-    
+
     /**
      * 保存文件哈希记录
      */
-    public void saveFileHash(String fileHash, String fileName, String fileUrl, 
-                            MultipartFile file, String mimeType) {
+    public void saveFileHash(String fileHash, String fileName, String fileUrl,
+                             MultipartFile file, String mimeType) {
         FileHash fileHashRecord = new FileHash();
         fileHashRecord.setFileHash(fileHash);
         fileHashRecord.setFileName(fileName);
@@ -64,17 +62,15 @@ public class FileHashService {
         fileHashRecord.setUploadCount(1);
         fileHashRecord.setCreatedAt(LocalDateTime.now());
         fileHashRecord.setLastUsedAt(LocalDateTime.now());
-        
-        fileHashMapper.insert(fileHashRecord);
+        fileHashDao.insert(fileHashRecord);
         log.info("保存文件哈希记录: {} -> {}", fileHash, fileName);
     }
-    
+
     /**
      * 更新文件使用信息
      */
     public void updateFileUsage(String fileHash) {
-        fileHashMapper.updateUsageInfo(fileHash);
+        fileHashDao.updateUsageInfo(fileHash);
         log.info("更新文件使用信息: {}", fileHash);
     }
 }
-

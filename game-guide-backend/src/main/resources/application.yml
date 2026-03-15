@@ -1,6 +1,10 @@
 spring:
   application:
     name: game-guide-backend
+  servlet:
+    multipart:
+      max-file-size: 10MB      # 单个文件最大 10MB
+      max-request-size: 20MB   # 单次请求总大小最大 20MB
   
   datasource:
     driver-class-name: org.postgresql.Driver
