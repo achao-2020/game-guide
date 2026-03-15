@@ -60,6 +60,8 @@ public class SecurityConfig {
                             .requestMatchers("/login").permitAll()
                             // 文件访问，无需登录
                             .requestMatchers("/api/files/**").permitAll()
+                            // 前台公开接口，无需登录
+                            .requestMatchers("/api/public/**").permitAll()
                             // GET 请求，无需登录
                             .requestMatchers(HttpMethod.GET, "/api/games/**", "/api/guides/**", "/api/categories/**", "/api/tags/**").permitAll()
                             // 其他 POST/PUT/DELETE 请求需要 ADMIN 角色

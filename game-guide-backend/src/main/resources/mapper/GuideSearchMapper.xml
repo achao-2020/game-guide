@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gameguide.mapper.GuideSearchMapper">
+
+    <!-- 新增或更新全文搜索记录（触发器自动维护 search_vec） -->
+    <insert id="upsert" parameterType="com.gameguide.entity.GuideSearch">
+        INSERT INTO guide_search (guide_id, title, content, game_id, game_name)
+        VALUES (#{guideId}, #{title}, #{content}, #{gameId}, #{gameName})
+        ON CONFLICT (guide_id) DO UPDATE
+            SET title     = EXCLUDED.title,
+                content   = EXCLUDED.content,
+                game_id   = EXCLUDED.game_id,
+                game_name = EXCLUDED.game_name
+    </insert>
+
+    <delete id="deleteByGuideId">
+        DELETE FROM guide_search WHERE guide_id = #{guideId}
+    </delete>
+
+    <!--
+        全文搜索：
+        - to_tsquery('simple', ...) 将关键词转为查询向量
+        - ts_rank_cd 按相关性降序排列
+        - ts_headline 生成高亮摘要（标记 <em> 标签）
+        - 同时支持 ILIKE 模糊兜底（当 tsvector 无命中时）
+    -->
+    <select id="fullTextSearch" resultType="com.gameguide.vo.GuideSearchVO">
+        SELECT
+            gs.guide_id                                                      AS guideId,
+            gs.title,
+            ts_headline(
+                'simple',
+                gs.content,
+                plainto_tsquery('simple', #{keyword}),
+                'MaxWords=60, MinWords=20, StartSel=&lt;em&gt;, StopSel=&lt;/em&gt;, HighlightAll=false'
+            )                                                                AS headline,
+            gs.game_id                                                       AS gameId,
+            gs.game_name                                                     AS gameName,
+            gs.updated_at                                                    AS updatedAt
+        FROM guide_search gs
+        WHERE
+            (
+                gs.search_vec @@ plainto_tsquery('simple', #{keyword})
+                OR gs.title   ILIKE CONCAT('%', #{keyword}, '%')
+                OR gs.content ILIKE CONCAT('%', #{keyword}, '%')
+            )
+            <if test="gameId != null">
+                AND gs.game_id = #{gameId}
+            </if>
+        ORDER BY
+            ts_rank_cd(gs.search_vec, plainto_tsquery('simple', #{keyword})) DESC,
+            gs.updated_at DESC
+    </select>
+
+</mapper>
+

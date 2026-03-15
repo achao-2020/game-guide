@@ -4,13 +4,17 @@ import com.gameguide.common.PageResult;
 import com.gameguide.dao.CategoryDao;
 import com.gameguide.dao.GameDao;
 import com.gameguide.dao.GuideDao;
+import com.gameguide.dao.GuideSearchDao;
 import com.gameguide.dao.GuideTagDao;
 import com.gameguide.dao.TagDao;
 import com.gameguide.dto.GuideDTO;
+import com.gameguide.entity.Game;
 import com.gameguide.entity.Guide;
+import com.gameguide.entity.GuideSearch;
 import com.gameguide.entity.GuideTag;
 import com.gameguide.exception.BusinessException;
 import com.gameguide.service.manager.GuideService;
+import com.gameguide.vo.GuideSearchVO;
 import com.gameguide.vo.GuideVO;
 import com.gameguide.vo.TagVO;
 import com.github.pagehelper.PageHelper;
@@ -33,17 +37,19 @@ public class GuideServiceImpl implements GuideService {
     private final CategoryDao categoryDao;
     private final TagDao tagDao;
     private final GuideTagDao guideTagDao;
+    private final GuideSearchDao guideSearchDao;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createGuide(GuideDTO guideDTO) {
-        if (gameDao.selectById(guideDTO.getGameId()) == null) {
+        Game game = gameDao.selectById(guideDTO.getGameId());
+        if (game == null) {
             throw new BusinessException("游戏不存在");
         }
         if (categoryDao.selectById(guideDTO.getCategoryId()) == null) {
             throw new BusinessException("分类不存在");
         }
-        
+
         // 创建 guide 记录
         Guide guide = new Guide();
         guide.setGameId(guideDTO.getGameId());
@@ -51,10 +57,14 @@ public class GuideServiceImpl implements GuideService {
         guide.setTitle(guideDTO.getTitle());
         guide.setContent(guideDTO.getContent());
         guideDao.insert(guide);
-        
+
         // 关联标签
         saveTagRelations(guide.getId(), guideDTO.getTagIds());
-        
+
+        // 同步全文搜索表
+        syncGuideSearch(guide.getId(), guide.getTitle(), guide.getContent(),
+                game.getId(), game.getName());
+
         return guide.getId();
     }
 
@@ -65,13 +75,14 @@ public class GuideServiceImpl implements GuideService {
         if (existingGuide == null) {
             throw new BusinessException("攻略不存在");
         }
-        if (gameDao.selectById(guideDTO.getGameId()) == null) {
+        Game game = gameDao.selectById(guideDTO.getGameId());
+        if (game == null) {
             throw new BusinessException("游戏不存在");
         }
         if (categoryDao.selectById(guideDTO.getCategoryId()) == null) {
             throw new BusinessException("分类不存在");
         }
-        
+
         // 更新 guide 记录
         Guide guide = new Guide();
         guide.setId(guideId);
@@ -84,6 +95,10 @@ public class GuideServiceImpl implements GuideService {
         // 更新标签关联
         guideTagDao.deleteByGuideId(guideId);
         saveTagRelations(guideId, guideDTO.getTagIds());
+
+        // 同步全文搜索表
+        syncGuideSearch(guideId, guideDTO.getTitle(), guideDTO.getContent(),
+                game.getId(), game.getName());
     }
 
     @Override
@@ -95,6 +110,7 @@ public class GuideServiceImpl implements GuideService {
         }
         guideTagDao.deleteByGuideId(guideId);
         guideDao.deleteById(guideId);
+        // guide_search 表有外键级联删除，无需手动删除
     }
 
     @Override
@@ -153,6 +169,15 @@ public class GuideServiceImpl implements GuideService {
         return new PageResult<>(pageInfo.getTotal(), pageNum, pageSize, guides);
     }
 
+    @Override
+    public PageResult<GuideSearchVO> fullTextSearchGuides(String keyword, Long gameId,
+                                                          Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<GuideSearchVO> results = guideSearchDao.fullTextSearch(keyword, gameId);
+        PageInfo<GuideSearchVO> pageInfo = new PageInfo<>(results);
+        return new PageResult<>(pageInfo.getTotal(), pageNum, pageSize, results);
+    }
+
     // ==================== private helpers ====================
 
     private void saveTagRelations(Long guideId, List<Long> tagIds) {
@@ -168,16 +193,27 @@ public class GuideServiceImpl implements GuideService {
         }
     }
 
+    private void syncGuideSearch(Long guideId, String title, String content,
+                                  Long gameId, String gameName) {
+        GuideSearch gs = new GuideSearch();
+        gs.setGuideId(guideId);
+        gs.setTitle(title);
+        gs.setContent(content);
+        gs.setGameId(gameId);
+        gs.setGameName(gameName);
+        guideSearchDao.upsert(gs);
+    }
+
     private List<TagVO> loadTags(Long guideId) {
         return tagDao.selectByGuideId(guideId).stream()
-                    .map(tag -> {
-                        TagVO tagVO = new TagVO();
-                        BeanUtils.copyProperties(tag, tagVO);
-                        return tagVO;
-                    })
-                    .collect(Collectors.toList());
-        }
-        
+                .map(tag -> {
+                    TagVO tagVO = new TagVO();
+                    BeanUtils.copyProperties(tag, tagVO);
+                    return tagVO;
+                })
+                .collect(Collectors.toList());
+    }
+
     private void loadTagsForList(List<GuideVO> guides) {
         for (GuideVO guideVO : guides) {
             guideVO.setTags(loadTags(guideVO.getId()));

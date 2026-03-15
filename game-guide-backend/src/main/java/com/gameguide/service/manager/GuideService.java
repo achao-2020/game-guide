@@ -2,6 +2,7 @@ package com.gameguide.service.manager;
 
 import com.gameguide.common.PageResult;
 import com.gameguide.dto.GuideDTO;
+import com.gameguide.vo.GuideSearchVO;
 import com.gameguide.vo.GuideVO;
 
 import java.util.List;
@@ -54,4 +55,10 @@ public interface GuideService {
      */
     PageResult<GuideVO> searchPublishedGuides(String keyword, Long gameId, Long categoryId,
                                               Integer pageNum, Integer pageSize);
+
+    /**
+     * 前台：全文搜索攻略（基于 PostgreSQL tsvector）
+     */
+    PageResult<GuideSearchVO> fullTextSearchGuides(String keyword, Long gameId,
+                                                   Integer pageNum, Integer pageSize);
 }

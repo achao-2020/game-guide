@@ -53,5 +53,10 @@ export const guideAPI = {
   // 前台：搜索攻略
   searchPublished(params) {
     return request.get('/guides/public/search', { params })
+  },
+
+  // 前台：全文搜索攻略（PostgreSQL tsvector，含高亮摘要）
+  fullTextSearch(params) {
+    return request.get('/public/guides/fulltext', { params })
   }
 }
