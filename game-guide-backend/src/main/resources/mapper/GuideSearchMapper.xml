@@ -23,7 +23,7 @@
         - to_tsquery('simple', ...) 将关键词转为查询向量
         - ts_rank_cd 按相关性降序排列
         - ts_headline 生成高亮摘要（标记 <em> 标签）
-        - 同时支持 ILIKE 模糊兜底（当 tsvector 无命中时）
+        - 同时支持 ILIKE 模糊兜底（当  tsvector 无命中时）
     -->
     <select id="fullTextSearch" resultType="com.gameguide.vo.GuideSearchVO">
         SELECT
