@@ -103,6 +103,11 @@ const loadData = async () => {
 
 const handleAdd = () => {
   dialogTitle.value = '新增标签'
+  form.id = null
+  form.name = ''
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
   dialogVisible.value = true
 }
 
@@ -147,6 +152,7 @@ const handleSubmit = async () => {
         loadData()
       } catch (error) {
         console.error('提交失败:', error)
+        ElMessage.error(error?.message || '提交失败，请检查网络或权限')
       } finally {
         submitLoading.value = false
       }
