@@ -3,41 +3,58 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gameguide.mapper.GuideSearchMapper">
 
-    <!-- 新增或更新全文搜索记录（触发器自动维护 search_vec） -->
+    <!--
+        新增或更新全文搜索记录
+        search_vec 由 SQL 直接计算（不依赖触发器）：
+          标题权重 A（最高）、游戏名权重 B、正文权重 C
+    -->
     <insert id="upsert" parameterType="com.gameguide.entity.GuideSearch">
-        INSERT INTO guide_search (guide_id, title, content, game_id, game_name)
-        VALUES (#{guideId}, #{title}, #{content}, #{gameId}, #{gameName})
+        INSERT INTO guide_search (guide_id, title, content, game_id, game_name, search_vec, updated_at)
+        VALUES (
+            #{guideId},
+            #{title},
+            #{content},
+            #{gameId},
+            #{gameName},
+            setweight(to_tsvector('simple', coalesce(#{title},    '')), 'A') ||
+            setweight(to_tsvector('simple', coalesce(#{gameName}, '')), 'B') ||
+            setweight(to_tsvector('simple', coalesce(#{content},  '')), 'C'),
+            CURRENT_TIMESTAMP
+        )
         ON CONFLICT (guide_id) DO UPDATE
-            SET title     = EXCLUDED.title,
-                content   = EXCLUDED.content,
-                game_id   = EXCLUDED.game_id,
-                game_name = EXCLUDED.game_name
+            SET title      = EXCLUDED.title,
+                content    = EXCLUDED.content,
+                game_id    = EXCLUDED.game_id,
+                game_name  = EXCLUDED.game_name,
+                search_vec = EXCLUDED.search_vec,
+                updated_at = CURRENT_TIMESTAMP
     </insert>
+
+    <!-- 单独更新 embedding（保存攻略后异步调用智谱 API） -->
+    <update id="updateEmbedding">
+        UPDATE guide_search
+        SET embedding = #{embeddingStr}::vector
+        WHERE guide_id = #{guideId}
+    </update>
 
     <delete id="deleteByGuideId">
         DELETE FROM guide_search WHERE guide_id = #{guideId}
     </delete>
 
-    <!--
-        全文搜索：
-        - to_tsquery('simple', ...) 将关键词转为查询向量
-        - ts_rank_cd 按相关性降序排列
-        - ts_headline 生成高亮摘要（标记 <em> 标签）
-        - 同时支持 ILIKE 模糊兜底（当  tsvector 无命中时）
-    -->
+    <!-- 全文搜索（tsvector + ILIKE 兜底） -->
     <select id="fullTextSearch" resultType="com.gameguide.vo.GuideSearchVO">
         SELECT
-            gs.guide_id                                                      AS guideId,
+            gs.guide_id  AS guideId,
             gs.title,
             ts_headline(
                 'simple',
                 gs.content,
                 plainto_tsquery('simple', #{keyword}),
                 'MaxWords=60, MinWords=20, StartSel=&lt;em&gt;, StopSel=&lt;/em&gt;, HighlightAll=false'
-            )                                                                AS headline,
-            gs.game_id                                                       AS gameId,
-            gs.game_name                                                     AS gameName,
-            gs.updated_at                                                    AS updatedAt
+            )            AS headline,
+            gs.game_id   AS gameId,
+            gs.game_name AS gameName,
+            gs.updated_at AS updatedAt
         FROM guide_search gs
         WHERE
             (
@@ -53,5 +70,30 @@
             gs.updated_at DESC
     </select>
 
-</mapper>
+    <!-- 查询所有 embedding 为空的记录，用于批量回填 -->
+    <select id="selectWithoutEmbedding" resultType="com.gameguide.entity.GuideSearch">
+        SELECT guide_id AS guideId, title, content, game_id AS gameId, game_name AS gameName
+        FROM guide_search
+        WHERE embedding IS NULL
+        ORDER BY guide_id
+    </select>
 
+    <!-- 向量相似度检索：余弦距离，值越小越相似 -->
+    <select id="vectorSearch" resultType="com.gameguide.vo.GuideSearchVO">
+        SELECT
+            gs.guide_id  AS guideId,
+            gs.title,
+            LEFT(gs.content, 300) AS headline,
+            gs.game_id   AS gameId,
+            gs.game_name AS gameName,
+            gs.updated_at AS updatedAt
+        FROM guide_search gs
+        WHERE gs.embedding IS NOT NULL
+            <if test="gameId != null">
+                AND gs.game_id = #{gameId}
+            </if>
+        ORDER BY gs.embedding &lt;=&gt; #{embeddingStr}::vector
+        LIMIT #{topK}
+    </select>
+
+</mapper>

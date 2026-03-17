@@ -37,7 +37,7 @@
           <span class="count-badge">{{ totalGames }}</span>
         </h2>
       </div>
-
+      
       <div v-loading="gamesLoading" class="results-content">
         <div v-if="games.length > 0" class="games-grid">
           <div
@@ -90,7 +90,7 @@
           基于全文索引，支持内容关键词高亮
         </div>
       </div>
-
+      
       <div v-loading="guidesLoading" class="results-content">
         <div v-if="guides.length > 0" class="guides-list">
           <div
@@ -103,17 +103,17 @@
               <div class="guide-game-tag">
                 <el-icon><Grid /></el-icon>
                 {{ guide.gameName || '未知游戏' }}
-              </div>
+            </div>
               <h3 class="guide-title" v-html="highlightKeyword(guide.title)"></h3>
               <!-- ts_headline 高亮摘要 -->
               <p class="guide-headline" v-html="guide.headline || '暂无摘要'"></p>
-            </div>
+              </div>
             <div class="guide-card-right">
               <span class="guide-time">{{ formatTime(guide.updatedAt) }}</span>
               <el-button type="primary" size="small" round>查看详情</el-button>
+              </div>
             </div>
           </div>
-        </div>
         <div v-else-if="!guidesLoading && keyword" class="empty-state">
           <el-icon :size="48" class="empty-icon"><Document /></el-icon>
           <p>未找到相关攻略</p>
@@ -227,10 +227,10 @@ const runSearch = (kw) => {
   keyword.value      = kw
   inputKeyword.value = kw
   gamePagination.pageNum  = 1
-  guidePagination.pageNum = 1
-  loadGames()
-  loadGuides()
-}
+    guidePagination.pageNum = 1
+    loadGames()
+    loadGuides()
+  }
 
 watch(() => route.query.keyword, (val) => { if (val) runSearch(val) })
 

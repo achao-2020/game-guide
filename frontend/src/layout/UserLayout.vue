@@ -24,7 +24,10 @@
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
-          
+
+          <!-- AI 助手入口 -->
+          <AiChat />
+
           <el-dropdown @command="handleCommand">
             <div class="user-info">
               <el-avatar :size="32">
@@ -67,6 +70,7 @@ import { useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { Trophy, Search, User, Setting, SwitchButton } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
+import AiChat from '@/components/AiChat.vue'
 
 const router = useRouter()
 const userStore = useUserStore()

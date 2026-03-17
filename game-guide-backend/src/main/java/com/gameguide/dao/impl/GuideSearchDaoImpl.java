@@ -21,6 +21,11 @@ public class GuideSearchDaoImpl implements GuideSearchDao {
     }
 
     @Override
+    public void updateEmbedding(Long guideId, String embeddingStr) {
+        guideSearchMapper.updateEmbedding(guideId, embeddingStr);
+    }
+
+    @Override
     public void deleteByGuideId(Long guideId) {
         guideSearchMapper.deleteByGuideId(guideId);
     }
@@ -29,5 +34,14 @@ public class GuideSearchDaoImpl implements GuideSearchDao {
     public List<GuideSearchVO> fullTextSearch(String keyword, Long gameId) {
         return guideSearchMapper.fullTextSearch(keyword, gameId);
     }
-}
 
+    @Override
+    public List<GuideSearchVO> vectorSearch(String embeddingStr, Long gameId, int topK) {
+        return guideSearchMapper.vectorSearch(embeddingStr, gameId, topK);
+    }
+
+    @Override
+    public List<GuideSearch> selectWithoutEmbedding() {
+        return guideSearchMapper.selectWithoutEmbedding();
+    }
+}

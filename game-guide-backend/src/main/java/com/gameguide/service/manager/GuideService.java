@@ -60,5 +60,5 @@ public interface GuideService {
      * 前台：全文搜索攻略（基于 PostgreSQL tsvector）
      */
     PageResult<GuideSearchVO> fullTextSearchGuides(String keyword, Long gameId,
-                                                   Integer pageNum, Integer pageSize);
+                                              Integer pageNum, Integer pageSize);
 }

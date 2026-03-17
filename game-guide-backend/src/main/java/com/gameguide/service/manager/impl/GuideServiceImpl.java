@@ -13,6 +13,7 @@ import com.gameguide.entity.Guide;
 import com.gameguide.entity.GuideSearch;
 import com.gameguide.entity.GuideTag;
 import com.gameguide.exception.BusinessException;
+import com.gameguide.service.manager.AiGuideService;
 import com.gameguide.service.manager.GuideService;
 import com.gameguide.vo.GuideSearchVO;
 import com.gameguide.vo.GuideVO;
@@ -38,6 +39,7 @@ public class GuideServiceImpl implements GuideService {
     private final TagDao tagDao;
     private final GuideTagDao guideTagDao;
     private final GuideSearchDao guideSearchDao;
+    private final AiGuideService aiGuideService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -49,7 +51,7 @@ public class GuideServiceImpl implements GuideService {
         if (categoryDao.selectById(guideDTO.getCategoryId()) == null) {
             throw new BusinessException("分类不存在");
         }
-
+        
         // 创建 guide 记录
         Guide guide = new Guide();
         guide.setGameId(guideDTO.getGameId());
@@ -57,13 +59,17 @@ public class GuideServiceImpl implements GuideService {
         guide.setTitle(guideDTO.getTitle());
         guide.setContent(guideDTO.getContent());
         guideDao.insert(guide);
-
+        
         // 关联标签
         saveTagRelations(guide.getId(), guideDTO.getTagIds());
-
+        
         // 同步全文搜索表
         syncGuideSearch(guide.getId(), guide.getTitle(), guide.getContent(),
                 game.getId(), game.getName());
+
+        // 异步生成 Embedding（不阻塞保存流程）
+        aiGuideService.generateAndSaveEmbedding(guide.getId(), guide.getTitle(),
+                guide.getContent(), game.getId(), game.getName());
 
         return guide.getId();
     }
@@ -82,7 +88,7 @@ public class GuideServiceImpl implements GuideService {
         if (categoryDao.selectById(guideDTO.getCategoryId()) == null) {
             throw new BusinessException("分类不存在");
         }
-
+        
         // 更新 guide 记录
         Guide guide = new Guide();
         guide.setId(guideId);
@@ -99,6 +105,10 @@ public class GuideServiceImpl implements GuideService {
         // 同步全文搜索表
         syncGuideSearch(guideId, guideDTO.getTitle(), guideDTO.getContent(),
                 game.getId(), game.getName());
+
+        // 异步更新 Embedding
+        aiGuideService.generateAndSaveEmbedding(guideId, guideDTO.getTitle(),
+                guideDTO.getContent(), game.getId(), game.getName());
     }
 
     @Override
@@ -206,14 +216,14 @@ public class GuideServiceImpl implements GuideService {
 
     private List<TagVO> loadTags(Long guideId) {
         return tagDao.selectByGuideId(guideId).stream()
-                .map(tag -> {
-                    TagVO tagVO = new TagVO();
-                    BeanUtils.copyProperties(tag, tagVO);
-                    return tagVO;
-                })
-                .collect(Collectors.toList());
-    }
-
+                    .map(tag -> {
+                        TagVO tagVO = new TagVO();
+                        BeanUtils.copyProperties(tag, tagVO);
+                        return tagVO;
+                    })
+                    .collect(Collectors.toList());
+        }
+        
     private void loadTagsForList(List<GuideVO> guides) {
         for (GuideVO guideVO : guides) {
             guideVO.setTags(loadTags(guideVO.getId()));

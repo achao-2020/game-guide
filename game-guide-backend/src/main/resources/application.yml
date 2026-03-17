@@ -9,7 +9,7 @@ spring:
     active: dev
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://192.168.2.108:5431/game_guide
+    url: jdbc:postgresql://192.168.2.108:5433/game_guide
     username: user_XA6emr
     password: password_SEcYGz
     hikari:
@@ -73,6 +73,30 @@ file:
   upload:
     path: D:/project/game-guide/uploads
     url-prefix: /api/files/
+
+# 智谱 AI 配置
+zhipu:
+  ai:
+    api-key: fce88b44242043ba985840d6abf2d2c5.Rcc2ai0R8XLynGLm
+    embedding-model: embedding-3   # 向量模型，输出 2048 维
+    chat-model: glm-4-flash        # 对话模型（glm-4-flash 免费额度多）
+    top-k: 5                       # 向量检索返回 Top-K 条攻略
+    # 定时任务：每天凌晨2点自动回填无 embedding 的攻略
+    embedding-cron: "0 0 2 * * ?"
+    prompts:
+      # {context} 占位符会被替换为检索到的攻略内容
+      system: |
+        你是一个专业的游戏攻略助手。
+        请严格根据下方提供的攻略内容回答用户问题，不要编造信息。
+        如果攻略中没有相关内容，请如实告知并建议用户浏览攻略列表。
+
+        【参考攻略内容】
+        {context}
+      # 向量检索无结果时的兜底提示
+      no-context: |
+        你是一个专业的游戏攻略助手。
+        当前攻略库中暂无与该问题匹配的内容，请根据通用游戏知识回答，
+        并在回答末尾注明【以上为通用建议，非攻略库内容】。
 
 # MinIO对象存储配置
 minio:
