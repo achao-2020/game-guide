@@ -23,6 +23,14 @@
           <el-icon><Document /></el-icon>
           <span>攻略管理</span>
         </el-menu-item>
+        <el-menu-item index="/admin/spider">
+          <el-icon><Download /></el-icon>
+          <span>攻略爬取</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/spider-list">
+          <el-icon><List /></el-icon>
+          <span>已爬取攻略</span>
+        </el-menu-item>
         <el-menu-item index="/admin/categories">
           <el-icon><Folder /></el-icon>
           <span>分类管理</span>

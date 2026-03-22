@@ -98,6 +98,18 @@ const router = createRouter({
           meta: { title: '编辑攻略', requiresAdmin: true }
         },
         {
+          path: 'spider',
+          name: 'AdminSpider',
+          component: () => import('@/views/SpiderCrawl.vue'),
+          meta: { title: '攻略爬取', requiresAdmin: true }
+        },
+        {
+          path: 'spider-list',
+          name: 'AdminSpiderList',
+          component: () => import('@/views/SpiderList.vue'),
+          meta: { title: '已爬取攻略', requiresAdmin: true }
+        },
+        {
           path: 'categories',
           name: 'AdminCategories',
           component: () => import('@/views/Categories.vue'),

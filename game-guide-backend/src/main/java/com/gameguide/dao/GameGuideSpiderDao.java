@@ -20,5 +20,9 @@ public interface GameGuideSpiderDao {
     List<GameGuideSpider> selectByKeyword(String keyword);
 
     GameGuideSpider selectBySourceUrl(String sourceUrl);
+
+    List<GameGuideSpider> selectPage(int offset, int pageSize);
+
+    long countAll();
 }
 

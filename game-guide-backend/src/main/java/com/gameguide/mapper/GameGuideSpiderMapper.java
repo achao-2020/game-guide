@@ -20,5 +20,9 @@ public interface GameGuideSpiderMapper {
     List<GameGuideSpider> selectByKeyword(@Param("keyword") String keyword);
 
     GameGuideSpider selectBySourceUrl(@Param("sourceUrl") String sourceUrl);
+
+    List<GameGuideSpider> selectPage(@Param("offset") int offset, @Param("pageSize") int pageSize);
+
+    long countAll();
 }
 

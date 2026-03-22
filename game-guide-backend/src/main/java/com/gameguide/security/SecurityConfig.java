@@ -64,6 +64,8 @@ public class SecurityConfig {
                             .requestMatchers("/api/public/**").permitAll()
                             // 管理后台 AI 接口，需要 ADMIN 权限
                             .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                            // 爬虫接口，需要 ADMIN 权限
+                            .requestMatchers("/api/spider/**").hasRole("ADMIN")
                             // GET 请求，无需登录
                             .requestMatchers(HttpMethod.GET, "/api/games/**", "/api/guides/**", "/api/categories/**", "/api/tags/**").permitAll()
                             // 其他 POST/PUT/DELETE 请求需要 ADMIN 角色

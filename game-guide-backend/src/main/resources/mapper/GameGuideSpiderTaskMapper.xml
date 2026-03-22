@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gameguide.mapper.GameGuideSpiderTaskMapper">
+
+    <resultMap id="BaseResultMap" type="com.gameguide.entity.GameGuideSpiderTask">
+        <id     column="id"          property="id"/>
+        <result column="url"         property="url"/>
+        <result column="page_size"   property="pageSize"/>
+        <result column="title"       property="title"/>
+        <result column="create_time" property="createTime"/>
+        <result column="finish_time" property="finishTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gameguide.entity.GameGuideSpiderTask"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO game_guide_spider_task (url, page_size, title, create_time)
+        VALUES (#{url}, #{pageSize}, #{title}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <!-- 任务完成时更新 finish_time -->
+    <update id="updateFinishTime">
+        UPDATE game_guide_spider_task
+        SET finish_time = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 回填第一篇文章的标题 -->
+    <update id="updateTitle">
+        UPDATE game_guide_spider_task
+        SET title = #{title}
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id, url, page_size, title, create_time, finish_time
+        FROM game_guide_spider_task
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT id, url, page_size, title, create_time, finish_time
+        FROM game_guide_spider_task
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>
+

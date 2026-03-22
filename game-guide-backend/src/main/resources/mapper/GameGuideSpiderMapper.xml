@@ -5,16 +5,17 @@
 
     <resultMap id="BaseResultMap" type="com.gameguide.entity.GameGuideSpider">
         <id column="id" property="id"/>
-        <result column="title" property="title"/>
-        <result column="content" property="content"/>
+        <result column="task_id"    property="taskId"/>
+        <result column="title"      property="title"/>
+        <result column="content"    property="content"/>
         <result column="source_url" property="sourceUrl"/>
         <result column="create_time" property="createTime"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.gameguide.entity.GameGuideSpider"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO game_guide_spider (title, content, source_url, create_time)
-        VALUES (#{title}, #{content}, #{sourceUrl}, CURRENT_TIMESTAMP)
+        INSERT INTO game_guide_spider (task_id, title, content, source_url, create_time)
+        VALUES (#{taskId}, #{title}, #{content}, #{sourceUrl}, CURRENT_TIMESTAMP)
     </insert>
 
     <delete id="deleteById">
@@ -52,6 +53,19 @@
         FROM game_guide_spider
         WHERE source_url = #{sourceUrl}
         LIMIT 1
+    </select>
+
+    <!-- 分页查询 -->
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT id, task_id, title, content, source_url, create_time
+        FROM game_guide_spider
+        ORDER BY create_time DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 总数 -->
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM game_guide_spider
     </select>
 
 </mapper>

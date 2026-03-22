@@ -208,6 +208,50 @@ ON CONFLICT (guide_id) DO UPDATE
         updated_at = CURRENT_TIMESTAMP;
 
 -- ============================================================
+-- 爬虫任务表与明细表
+-- ============================================================
+
+-- 爬虫任务主表
+CREATE TABLE IF NOT EXISTS game_guide_spider_task (
+    id          BIGSERIAL    PRIMARY KEY,
+    url         VARCHAR(500) NOT NULL,
+    page_size   INTEGER      NOT NULL DEFAULT 0,
+    title       VARCHAR(500) NOT NULL,
+    create_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    finish_time TIMESTAMP
+);
+
+COMMENT ON TABLE  game_guide_spider_task             IS '爬虫任务记录表';
+COMMENT ON COLUMN game_guide_spider_task.url         IS '爬取起始列表页 URL';
+COMMENT ON COLUMN game_guide_spider_task.page_size   IS '爬取页数（endPage - startPage + 1）';
+COMMENT ON COLUMN game_guide_spider_task.title       IS '任务标题：取第一篇文章标题，无则为 时间-爬取游戏攻略';
+COMMENT ON COLUMN game_guide_spider_task.create_time IS '任务创建时间';
+COMMENT ON COLUMN game_guide_spider_task.finish_time IS '任务完成时间，NULL 表示未完成';
+
+CREATE INDEX IF NOT EXISTS idx_spider_task_create_time ON game_guide_spider_task(create_time DESC);
+
+-- 爬虫明细表（原 game_guide_spider，增加 task_id 外键）
+CREATE TABLE IF NOT EXISTS game_guide_spider (
+    id          BIGSERIAL    PRIMARY KEY,
+    task_id     BIGINT       REFERENCES game_guide_spider_task(id) ON DELETE SET NULL,
+    title       VARCHAR(500) NOT NULL,
+    content     TEXT         NOT NULL,
+    source_url  VARCHAR(500) NOT NULL UNIQUE,
+    create_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE  game_guide_spider            IS '爬虫攻略明细表';
+COMMENT ON COLUMN game_guide_spider.task_id    IS '关联的爬虫任务 ID';
+COMMENT ON COLUMN game_guide_spider.source_url IS '文章来源 URL，唯一约束用于去重';
+
+CREATE INDEX IF NOT EXISTS idx_spider_task_id     ON game_guide_spider(task_id);
+CREATE INDEX IF NOT EXISTS idx_spider_source_url  ON game_guide_spider(source_url);
+CREATE INDEX IF NOT EXISTS idx_spider_create_time ON game_guide_spider(create_time DESC);
+
+-- 若已有旧表（无 task_id 列），执行以下语句追加列：
+-- ALTER TABLE game_guide_spider ADD COLUMN IF NOT EXISTS task_id BIGINT REFERENCES game_guide_spider_task(id) ON DELETE SET NULL;
+
+-- ============================================================
 -- 初始化完成
 -- 提示：执行完毕后，调用以下接口回填历史攻略的向量数据：
 --   POST /api/admin/ai/embedding/batch   （需要管理员 Token）

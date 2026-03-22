@@ -5,11 +5,13 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * game_guide_spider 表：爬取的网络攻略
+ * game_guide_spider 表：爬取的网络攻略明细
  */
 @Data
 public class GameGuideSpider {
     private Long id;
+    /** 关联的爬虫任务 ID */
+    private Long taskId;
     private String title;
     private String content;
     private String sourceUrl;

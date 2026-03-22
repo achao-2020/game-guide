@@ -43,5 +43,15 @@ public class GameGuideSpiderDaoImpl implements GameGuideSpiderDao {
     public GameGuideSpider selectBySourceUrl(String sourceUrl) {
         return gameGuideSpiderMapper.selectBySourceUrl(sourceUrl);
     }
+
+    @Override
+    public List<GameGuideSpider> selectPage(int offset, int pageSize) {
+        return gameGuideSpiderMapper.selectPage(offset, pageSize);
+    }
+
+    @Override
+    public long countAll() {
+        return gameGuideSpiderMapper.countAll();
+    }
 }
 

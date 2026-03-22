@@ -1,5 +1,9 @@
 package com.gameguide.spider;
 
+import com.gameguide.entity.GameGuideSpider;
+
+import java.util.List;
+
 public interface SpiderStrategy {
 
     /**
@@ -8,7 +12,12 @@ public interface SpiderStrategy {
     boolean supports(String site);
 
     /**
-     * 执行爬虫
+     * 执行爬虫（使用默认 selector）
      */
-    void spider();
+    void spider(String site);
+
+    /**
+     * 执行爬虫，使用自定义 selector，爬取后不保存，返回结果列表
+     */
+    List<GameGuideSpider> spider(String site, String titleSelector, String contentSelector);
 }

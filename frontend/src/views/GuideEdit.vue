@@ -77,6 +77,25 @@
                   </div>
                 </div>
               </el-tab-pane>
+              <el-tab-pane label="HTML编辑" name="html">
+                <div class="html-editor-wrapper">
+                  <el-input
+                    v-model="htmlContent"
+                    type="textarea"
+                    :rows="20"
+                    placeholder="请输入或粘贴 HTML 内容"
+                    class="html-textarea"
+                  />
+                  <div class="editor-actions">
+                    <el-button type="primary" size="small" @click="convertHtmlToMarkdown">
+                      转换为Markdown
+                    </el-button>
+                    <el-button size="small" @click="htmlContent = ''">
+                      清空
+                    </el-button>
+                  </div>
+                </div>
+              </el-tab-pane>
               <el-tab-pane label="预览" name="preview">
                 <div class="markdown-preview" v-html="renderedContent"></div>
               </el-tab-pane>
@@ -111,6 +130,7 @@ const formRef = ref(null)
 const activeTab = ref('edit')
 const quillEditor = ref(null)
 let quillInstance = null
+const htmlContent = ref('')
 const turndownService = new TurndownService({
   headingStyle: 'atx',
   codeBlockStyle: 'fenced'
@@ -415,6 +435,22 @@ const uploadThirdPartyImage = async (imageUrl) => {
   }
 }
 
+const convertHtmlToMarkdown = () => {
+  if (!htmlContent.value || !htmlContent.value.trim()) {
+    ElMessage.warning('HTML 内容为空')
+    return
+  }
+  try {
+    const markdown = turndownService.turndown(htmlContent.value)
+    form.content = markdown
+    activeTab.value = 'edit'
+    ElMessage.success('已转换为 Markdown 格式')
+  } catch (error) {
+    console.error('转换失败:', error)
+    ElMessage.error('转换失败，请检查 HTML 格式')
+  }
+}
+
 const convertToMarkdown = async () => {
   if (!quillInstance) return
   
@@ -465,6 +501,14 @@ onMounted(() => {
   loadOptions()
   if (isEdit.value) {
     loadGuideData()
+  }
+  // 从爬取攻略详情跳转过来时，预填标题和内容
+  const state = history.state
+  if (state?.prefillTitle) {
+    form.title = state.prefillTitle
+  }
+  if (state?.prefillContent) {
+    form.content = state.prefillContent
   }
 })
 
@@ -634,6 +678,18 @@ onBeforeUnmount(() => {
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   background: #fff;
+}
+
+.html-editor-wrapper {
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.html-textarea :deep(textarea) {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .quill-editor {
