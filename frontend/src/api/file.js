@@ -10,6 +10,11 @@ export const fileAPI = {
         'Content-Type': 'multipart/form-data'
       }
     })
+  },
+
+  // 图片转链：将第三方 HTTP 图片上传到本地存储并返回本地 URL
+  rehost(url) {
+    return request.post('/files/rehost', { url })
   }
 }
 

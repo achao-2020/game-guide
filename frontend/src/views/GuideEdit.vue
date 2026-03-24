@@ -63,6 +63,11 @@
                   placeholder="请输入攻略内容（支持Markdown）"
                   class="markdown-textarea"
                 />
+                <div class="editor-actions">
+                  <el-button type="primary" size="small" @click="convertMarkdownToRichtext">
+                    转换为富文本
+                  </el-button>
+                </div>
               </el-tab-pane>
               <el-tab-pane label="富文本编辑" name="richtext">
                 <div class="richtext-editor-wrapper">
@@ -290,10 +295,12 @@ const initQuillEditor = () => {
       placeholder: '请输入攻略内容（支持复制粘贴图片）...'
     })
     
-    // 如果是编辑模式且有内容，将 Markdown 转换为 HTML 加载到编辑器
+    // 如果是编辑模式且有内容，将 Markdown 转换为 HTML 加载到编辑器，并批量转链
     if (isEdit.value && form.content) {
       const html = markdownToHtml(form.content)
       quillInstance.root.innerHTML = html
+      // 异步批量转链编辑器中已有的第三方图片
+      rehostAllImagesInEditor()
     }
     
     // 监听 text-change 事件，检测粘贴的 Base64 图片
@@ -305,29 +312,50 @@ const initQuillEditor = () => {
   }
 }
 
-// 处理 Quill 编辑器的变化，检测粘贴的 Base64 图片
+// 批量转链编辑器中已有的第三方图片
+const rehostAllImagesInEditor = async () => {
+  if (!quillInstance) return
+  const imgs = quillInstance.root.querySelectorAll('img')
+  if (imgs.length === 0) return
+  let html = quillInstance.root.innerHTML
+  let changed = false
+  for (const img of imgs) {
+    const src = img.getAttribute('src')
+    if (src && (isBase64Url(src) || isThirdPartyUrl(src))) {
+      try {
+        const newUrl = await uploadThirdPartyImage(src)
+        if (newUrl && newUrl !== src) {
+          html = html.split(`src="${src}"`).join(`src="${newUrl}"`)
+          changed = true
+        }
+      } catch (e) {
+        console.error('批量转链图片失败:', src, e)
+      }
+    }
+  }
+  if (changed) {
+    quillInstance.root.innerHTML = html
+  }
+}
+
+// 处理 Quill 编辑器的变化，检测粘贴的 Base64 或第三方 HTTP 图片
 const handleQuillChange = async (delta, oldDelta) => {
-  // 检查是否有新增的图片
   const newOps = delta.ops
-  const oldOps = oldDelta.ops
-  
-  // 简单的检测：如果新增了图片操作，检查是否是 Base64
   for (let i = 0; i < newOps.length; i++) {
     const op = newOps[i]
     if (op.insert && typeof op.insert === 'object' && op.insert.image) {
       const imageUrl = op.insert.image
-      // 如果是 Base64 格式，上传它
-      if (isBase64Url(imageUrl)) {
-        // 延迟处理，避免干扰编辑器状态
+      if (isBase64Url(imageUrl) || isThirdPartyUrl(imageUrl)) {
         setTimeout(async () => {
           try {
             const newUrl = await uploadThirdPartyImage(imageUrl)
-            // 替换编辑器中的图片 URL
-            const html = quillInstance.root.innerHTML
-            const newHtml = html.split(`src="${imageUrl}"`).join(`src="${newUrl}"`)
-            quillInstance.root.innerHTML = newHtml
+            if (newUrl !== imageUrl) {
+              const html = quillInstance.root.innerHTML
+              const newHtml = html.split(`src="${imageUrl}"`).join(`src="${newUrl}"`)
+              quillInstance.root.innerHTML = newHtml
+            }
           } catch (error) {
-            console.error('上传粘贴的图片失败:', error)
+            console.error('上传图片失败:', error)
           }
         }, 100)
       }
@@ -391,6 +419,14 @@ const isBase64Url = (url) => {
   return url.startsWith('data:image/')
 }
 
+// 检查是否是需要转链的第三方 HTTP 图片
+const isThirdPartyUrl = (url) => {
+  if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) return false
+  // 排除本地服务的图片
+  const localPatterns = [window.location.host, '/api/files/']
+  return !localPatterns.some(p => url.includes(p))
+}
+
 // 将 Base64 数据 URL 转换为 File 对象
 const base64ToFile = (dataUrl, fileName = 'image.png') => {
   // 提取 MIME 类型
@@ -412,26 +448,41 @@ const base64ToFile = (dataUrl, fileName = 'image.png') => {
   return new File([blob], fileName, { type: mimeType })
 }
 
-// 将 Base64 图片 URL 转换为 File 对象并上传
+// 将图片 URL（Base64 或第三方 HTTP）上传到本地存储并返回本地 URL
 const uploadThirdPartyImage = async (imageUrl) => {
   try {
-    let file
-    
-    // 处理 Base64 格式的图片
     if (isBase64Url(imageUrl)) {
-      file = base64ToFile(imageUrl)
-    } else {
-      // 不处理第三方 HTTP(S) 图片，直接返回原 URL
-      return imageUrl
+      // Base64 图片：转为 File 后上传
+      const file = base64ToFile(imageUrl)
+      return await uploadImage(file)
+    } else if (isThirdPartyUrl(imageUrl)) {
+      // 第三方 HTTP 图片：调用后端转链接口
+      const localUrl = await fileAPI.rehost(imageUrl)
+      return localUrl
     }
-    
-    // 上传文件
-    const uploadedUrl = await uploadImage(file)
-    return uploadedUrl
-  } catch (error) {
-    console.error('上传 Base64 图片失败:', error)
-    // 如果上传失败，返回原 URL
     return imageUrl
+  } catch (error) {
+    console.error('图片转链失败:', error)
+    return imageUrl
+  }
+}
+
+const convertMarkdownToRichtext = async () => {
+  if (!form.content || !form.content.trim()) {
+    ElMessage.warning('Markdown 内容为空')
+    return
+  }
+  // 切换到富文本 Tab，等待编辑器初始化后填入内容
+  activeTab.value = 'richtext'
+  await nextTick()
+  // 等编辑器初始化完成（watch 里会 initQuillEditor）
+  await new Promise(resolve => setTimeout(resolve, 100))
+  if (quillInstance) {
+    const html = markdownToHtml(form.content)
+    quillInstance.root.innerHTML = html
+    // 批量转链编辑器中的第三方图片
+    await rehostAllImagesInEditor()
+    ElMessage.success('已转换为富文本，可继续编辑')
   }
 }
 
